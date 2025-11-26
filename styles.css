@@ -290,3 +290,12 @@
         font-size: 16px;
     }
 }
+
+header img, .header-image {
+    position: sticky;
+    top: 0;
+    width: 100%; /* Full width */
+    height: auto; /* Maintain aspect ratio */
+    display: block;
+    z-index: 10; /* Ensure it stays above background */
+}
