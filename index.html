@@ -4,66 +4,11 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Pawlos M. | Architect & Developer</title>
+    <link href="https://via.placeholder.com/32" rel="icon" type="image/png"/>
     
-    <!-- External CSS & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
     
-    <!-- Firebase SDKs for Main Page (Reads Data) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global variables provided by the environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-cms-app';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        let db, auth;
-        
-        // Initialize Firebase
-        async function initializeFirebase() {
-            try {
-                if (Object.keys(firebaseConfig).length === 0) throw new Error("Missing Config");
-                
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Sign in for read access
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
-                // Start listener once auth is ready
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        window.loadProjectsFromFirestore();
-                    }
-                });
-
-            } catch (error) {
-                console.error("Firebase Init Error:", error);
-                const grid = document.querySelector('.projects-grid');
-                if(grid) grid.innerHTML = '<p style="text-align:center; color:red;">Database connection failed.</p>';
-            }
-        }
-        
-        // Expose helper for script.js
-        window.getProjectsCollectionRef = () => {
-            return collection(db, 'artifacts', appId, 'public', 'data', 'projects');
-        };
-
-        // Expose SDK functions for script.js
-        window.dbQuery = query;
-        window.dbOrderBy = orderBy;
-        window.dbOnSnapshot = onSnapshot;
-
-        document.addEventListener('DOMContentLoaded', initializeFirebase);
-    </script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -82,11 +27,6 @@
             <a href="#skills" onclick="toggleMenu()">Skills</a>
             <a href="#projects" onclick="toggleMenu()">Projects</a>
             <a href="#contact" onclick="toggleMenu()">Contact</a>
-            
-            <!-- LINK TO CMS PAGE -->
-            <a href="cms.html" target="_blank" style="color: #f4a261; border: 1px solid #f4a261; padding: 5px 15px; border-radius: 20px; margin-left: 10px;">
-                <i class="fas fa-lock"></i> Admin
-            </a>
         </div>
     </nav>
 
@@ -152,7 +92,35 @@
         </div>
 
         <div class="projects-grid">
-            <p style="text-align: center; color: #ccc;">Loading projects from database...</p>
+            <a href="project-villa.html" class="project-card tilt-card" data-category="arch">
+                <img alt="Modern Villa" src="photo_5_2025-11-10_15-23-30.jpg" onerror="this.src='https://placehold.co/600x400/013328/ede9d6?text=Modern+Villa'"/>
+                <h3>Modern Villa</h3>
+                <p>A luxurious villa design emphasizing open spaces, sustainable materials, and natural light.</p>
+            </a>
+
+            <a href="project-urban.html" class="project-card tilt-card" data-category="arch">
+                <img alt="Urban Complex" src="dd15655392.png" onerror="this.src='https://placehold.co/600x400/013328/ede9d6?text=Urban+Complex'"/>
+                <h3>Urban Complex</h3>
+                <p>A mixed-use development combining residential units with commercial hubs.</p>
+            </a>
+
+            <a href="#" class="project-card tilt-card" data-category="arch">
+                <img alt="Interior Concept" src="placeholder.jpg" onerror="this.src='https://placehold.co/600x400/013328/ede9d6?text=Interior+Design'"/>
+                <h3>Interior Concept</h3>
+                <p>Minimalist interior design focusing on ergonomic flow and warm lighting.</p>
+            </a>
+
+            <a href="https://getachew-tsedeke-car-sales.42web.io/" class="project-card tilt-card" data-category="dev">
+                <img alt="ጌታቸው ፀደቀ የመኪና ሽያጭ Web Page" src="pr1.png" onerror="this.src='https://placehold.co/600x400/1e272e/ede9d6?text=Portfolio+Website'"/>
+                <h3>ጌታቸው ፀደቀ የመኪና ሽያጭ</h3>
+                <p>A fully responsive functional business website aesthetically built with companies brand colors.</p>
+            </a>
+
+            <a href="#" class="project-card tilt-card" data-category="dev">
+                <img alt="Real Estate App" src="web-project-2.jpg" onerror="this.src='https://placehold.co/600x400/1e272e/ede9d6?text=Real+Estate+App'"/>
+                <h3>Prime Rental App</h3>
+                <p>A full-stack web application for renting real estate properties with user authentication.</p>
+            </a>
         </div>
     </section>
 
@@ -170,14 +138,14 @@
                 <p><i class="fas fa-phone"></i> +251 908 786 726</p>
                 <p><i class="fas fa-envelope"></i> pawlob.21@gmail.com</p>
                 <p><i class="fas fa-map-marker-alt"></i> Addis Ababa, Ethiopia</p>
-                <!-- Map -->
-                <div style="width:100%; height:200px; background:#222; margin-top:20px; display:flex; align-items:center; justify-content:center; color:#555;">
-                   Map Placeholder
+                <div class="embed-map-responsive">
+                    <div class="embed-map-container">
+                        <iframe class="embed-map-frame" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?width=600&height=400&hl=en&q=pawlos%20art&t=p&z=18&ie=UTF8&iwloc=B&output=embed"></iframe><a href="https://cartoongames.io" style="font-size:2px!important;color:gray!important;position:absolute;bottom:0;left:0;z-index:1;max-height:10px;overflow:hidden">Cartoon Network Games</a><a href="https://nickgames.io" style="font-size:2px!important;color:gray!important;position:absolute;bottom:0;left:0;z-index:1;max-height:10px;overflow:hidden">Nickelodeon Games</a></div><style>.embed-map-responsive{position:relative;text-align:right;width:100%;height:0;padding-bottom:66.66666666666666%;}.embed-map-container{overflow:hidden;background:none!important;width:100%;height:100%;position:absolute;top:0;left:0;}.embed-map-frame{width:100%!important;height:100%!important;position:absolute;top:0;left:0;}</style>
                 </div>
                 <div class="social-icons">
-                    <a href="#" target="_blank"><i class="fab fa-facebook"></i></a>
-                    <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
-                    <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+                    <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
                 </div>
             </div>
         </div>
