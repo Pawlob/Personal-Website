@@ -1,108 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Pawlos M. Designer|Developer</title>
-<link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Pawlos M. | Architect & Developer</title>
+    
+    <!-- External CSS & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDKs for Main Page (Reads Data) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-cms-app';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let db, auth;
+        
+        // Initialize Firebase
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) throw new Error("Missing Config");
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Sign in for read access
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                // Start listener once auth is ready
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        window.loadProjectsFromFirestore();
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase Init Error:", error);
+                const grid = document.querySelector('.projects-grid');
+                if(grid) grid.innerHTML = '<p style="text-align:center; color:red;">Database connection failed.</p>';
+            }
+        }
+        
+        // Expose helper for script.js
+        window.getProjectsCollectionRef = () => {
+            return collection(db, 'artifacts', appId, 'public', 'data', 'projects');
+        };
+
+        // Expose SDK functions for script.js
+        window.dbQuery = query;
+        window.dbOrderBy = orderBy;
+        window.dbOnSnapshot = onSnapshot;
+
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+    </script>
 </head>
 <body>
-<div class="overlay" onclick="toggleMenu()"></div>
-<nav>
-<img alt="Logo" src="text-logo1.png"/>
-<div class="hamburger" onclick="toggleMenu()">
-<div></div><div></div><div></div>
-</div>
-<div class="nav-links">
-<span class="close-btn" onclick="toggleMenu()">×</span>
-<a href="#about">About</a>
-<a href="#projects">Projects</a>
-<a href="#contact">Contact</a>
-</div>
-</nav>
-<header>
-</header>
 
-<section>
-<div class="hero" style="flex:1;min-width:10px;text-align:center;">
-<img alt="Profile Photo" src="Profile-photo-Recoveredfinall.png" style="width:250px;height:250px;border-radius:50%;object-fit:cover;"/>
-<p style="font-size:1.2em;color:#ede9d6;">Architect | Creative Designer | Innovator</p>
-</div>
- <div class="hero-visual">
-            <div class="cube-container">
-                <div class="cube">
-                    <div class="face front">CODE</div>
-                    <div class="face back">DESIGN</div>
-                    <div class="face right">ARCH</div>
-                    <div class="face left">WEB</div>
-                    <div class="face top"></div>
-                    <div class="face bottom"></div>
+    <div class="overlay" onclick="toggleMenu()"></div>
+
+    <nav>
+        <img alt="Logo" src="text-logo1.png" onerror="this.style.display='none'; document.write('<span style=\'font-weight:bold; font-size:1.2rem; color:#ede9d6;\'>PAWLOS.M</span>')"/>
+        
+        <div class="hamburger" onclick="toggleMenu()">
+            <div></div><div></div><div></div>
+        </div>
+
+        <div class="nav-links">
+            <span class="close-btn" onclick="toggleMenu()">×</span>
+            <a href="#about" onclick="toggleMenu()">About</a>
+            <a href="#skills" onclick="toggleMenu()">Skills</a>
+            <a href="#projects" onclick="toggleMenu()">Projects</a>
+            <a href="#contact" onclick="toggleMenu()">Contact</a>
+            
+            <!-- LINK TO CMS PAGE -->
+            <a href="cms.html" target="_blank" style="color: #f4a261; border: 1px solid #f4a261; padding: 5px 15px; border-radius: 20px; margin-left: 10px;">
+                <i class="fas fa-lock"></i> Admin
+            </a>
+        </div>
+    </nav>
+
+    <header>
+        <div class="hero-content">
+            <div class="profile-container">
+                <div class="ring-one"></div>
+                <div class="ring-two"></div>
+                <img class="profile-img" alt="Pawlos Mulugeta" src="Profile-photo-Recoveredfinall.png" onerror="this.src='https://via.placeholder.com/200'"/>
+            </div>
+            
+            <h1>Pawlos Mulugeta</h1>
+            <p>Architect | Creative Designer | Innovator</p>
+        </div>
+
+        <div class="cube-wrapper">
+            <div class="cube">
+                <div class="face front">CODE</div>
+                <div class="face back">DESIGN</div>
+                <div class="face right">ARCH</div>
+                <div class="face left">WEB</div>
+                <div class="face top"><i class="fas fa-layer-group"></i></div>
+                <div class="face bottom"><i class="fas fa-pencil-ruler"></i></div>
+            </div>
+        </div>
+    </header>
+
+    <section id="about">
+        <h2>About Me</h2>
+        <p style="max-width: 700px; margin: 0 auto; font-size: 1.2rem; line-height: 1.6;">
+            I am an architect passionate about creating sustainable and innovative designs that blend functionality with aesthetics. 
+            With a unique background in both physical architecture and digital development, I bridge the gap between built environments and digital experiences.
+        </p>
+    </section>
+
+    <section id="skills">
+        <h2>My Skills</h2>
+        <div class="skills-container">
+            <div class="skill-category">
+                <h3>Architecture & Design</h3>
+                <div class="skill-item"><div class="skill-info"><span>AutoCAD</span><span>95%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 95%;"></div></div></div>
+                <div class="skill-item"><div class="skill-info"><span>SketchUp</span><span>90%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 90%;"></div></div></div>
+                <div class="skill-item"><div class="skill-info"><span>Revit / BIM</span><span>90%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 90%;"></div></div></div>
+                <div class="skill-item"><div class="skill-info"><span>3D Rendering</span><span>85%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 85%;"></div></div></div>
+            </div>
+            <div class="skill-category">
+                <h3>Development & Web</h3>
+                <div class="skill-item"><div class="skill-info"><span>UI/UX Design</span><span>95%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 95%;"></div></div></div>
+                <div class="skill-item"><div class="skill-info"><span>HTML / CSS</span><span>90%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 90%;"></div></div></div>
+                <div class="skill-item"><div class="skill-info"><span>JavaScript</span><span>80%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 80%;"></div></div></div>
+                <div class="skill-item"><div class="skill-info"><span>Python</span><span>75%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 75%;"></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2>Projects</h2>
+        
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterProjects('all')">All</button>
+            <button class="filter-btn" onclick="filterProjects('arch')">Architecture & Design</button>
+            <button class="filter-btn" onclick="filterProjects('dev')">Development & Web</button>
+        </div>
+
+        <div class="projects-grid">
+            <p style="text-align: center; color: #ccc;">Loading projects from database...</p>
+        </div>
+    </section>
+
+    <section id="contact">
+        <h2>Contact Me</h2>
+        <div class="contact-container">
+            <form>
+                <input placeholder="Your Name" required type="text"/>
+                <input placeholder="Email" required type="email"/>
+                <textarea placeholder="Your Message" required rows="5"></textarea>
+                <button type="submit">Send Message</button>
+            </form>
+            <div class="contact-details">
+                <h3 style="color: var(--highlight-color); margin-top:0;">Info</h3>
+                <p><i class="fas fa-phone"></i> +251 908 786 726</p>
+                <p><i class="fas fa-envelope"></i> pawlob.21@gmail.com</p>
+                <p><i class="fas fa-map-marker-alt"></i> Addis Ababa, Ethiopia</p>
+                <!-- Map -->
+                <div style="width:100%; height:200px; background:#222; margin-top:20px; display:flex; align-items:center; justify-content:center; color:#555;">
+                   Map Placeholder
+                </div>
+                <div class="social-icons">
+                    <a href="#" target="_blank"><i class="fab fa-facebook"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
                 </div>
             </div>
         </div>
-</section>
+    </section>
 
-<section class="background-color">
-<section class="about" id="about">
-<h2>About Me</h2>
-<p>I am an architect passionate about creating sustainable and innovative designs that blend functionality with aesthetics.</p>
-</section>
-<section id="projects">
-<h2>Projects</h2>
-<div class="projects">
-<div class="project-card">
-<img alt="Project 1" src="photo_5_2025-11-10_15-23-30.jpg"/>
-<h3>Modern Villa</h3>
-<p>A luxurious villa design emphasizing open spaces and natural light.</p>
-</div>
-<div class="project-card">
-<img alt="Project 2" src="dd15655392.png"/>
-<h3>Urban Complex</h3>
-<p>A mixed-use development combining residential and commercial spaces.</p>
-</div>
-</div>
-</section>
-<section class="contact" id="contact">
-<h2>Contact Me</h2>
-<form>
-<input placeholder="Your Name" required="" type="text"/>
-<input placeholder="Your Email" required="" type="email"/>
-<textarea placeholder="Your Message" required="" rows="5"></textarea>
-<button type="submit">Send Message</button>
-</form>
-</section>
-<button aria-label="Go to top" id="backToTop" onclick="scrollToTop()">
-<svg fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<path d="M12 4l-7 7h4v7h6v-7h4L12 4z" fill="#fff"></path>
-</svg>
-</button>
+    <footer>
+        © 2025 Pawlos Mulugeta. All rights reserved.
+    </footer>
 
-<section id="contact-info" style="padding: 40px; background-color: #222; color: #fff; font-family: 'Arial, sans-serif'; text-align: center;">
-<h2 style="font-size: 28px; margin-bottom: 20px; color: #f4a261;">Contact Information</h2>
-<p style="font-size: 18px; margin: 5px 0;"><strong>Phone:</strong> +251 911 123 456</p>
-<p style="font-size: 18px; margin: 5px 0;"><strong>Email:</strong> pawlos.mulugeta@example.com</p>
-<p style="font-size: 18px; margin: 5px 0;"><strong>Address:</strong> Addis Ababa, Ethiopia</p>
-<div style="margin-top: 20px; border-radius: 8px; overflow: hidden;">
-<iframe allowfullscreen="" height="300" loading="lazy" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3901.094208173!2d38.746800315334!3d9.030000993518!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85c8f0f0f0f0%3A0xf577d8f9f0f0f0f0!2sAddis%20Ababa!5e0!3m2!1sen!2set!4v1633024800000!5m2!1sen!2et" style="border:0;" width="100%">
-</iframe>
-</div>
-<div style="margin-top: 20px;">
-<a href="https://facebook.com" style="margin: 0 10px; color: #f4a261; font-size: 24px; text-decoration: none;" target="_blank">
-<i class="fab fa-facebook"></i> Facebook
-        </a>
-<a href="https://instagram.com" style="margin: 0 10px; color: #f4a261; font-size: 24px; text-decoration: none;" target="_blank">
-<i class="fab fa-instagram"></i> Instagram
-        </a>
-<a href="https://linkedin.com" style="margin: 0 10px; color: #f4a261; font-size: 24px; text-decoration: none;" target="_blank">
-<i class="fab fa-linkedin"></i> LinkedIn
-        </a>
-</div>
-</section>
-</section>
+    <button aria-label="Go to top" id="backToTop" onclick="scrollToTop()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 4l-7 7h4v7h6v-7h4L12 4z"></path>
+        </svg>
+    </button>
 
-<footer style="text-align:center; padding:20px; background-color:#ede9d6; color:#013328; font-family:Arial, sans-serif;">
-    © 2025 Pawlos Mulugeta. All rights reserved.
-</footer>
+    <script src="script.js"></script>
 </body>
 </html>
