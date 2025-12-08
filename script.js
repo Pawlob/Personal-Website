@@ -1,69 +1,99 @@
 /* --- script.js --- */
 
-/* 1. LOAD PROJECTS FROM CMS (Local Storage) */
-const STORAGE_KEY = 'pawlos_portfolio_projects';
-const defaultProjects = [
-    { title: "Modern Villa", category: "arch", img: "photo_5_2025-11-10_15-23-30.jpg", desc: "A luxurious villa design emphasizing open spaces.", link: "project-villa.html" },
-    { title: "Urban Complex", category: "arch", img: "dd15655392.png", desc: "Mixed-use development combining residential units.", link: "project-urban.html" },
-    { title: "Portfolio V1", category: "dev", img: "web-project-1.jpg", desc: "Responsive personal portfolio with 3D animations.", link: "#" }
-];
-
-function renderProjects() {
+// 1. RENDER FUNCTION (Called directly by index.html when data arrives)
+window.renderProjects = function(projects) {
     const container = document.querySelector('.projects-grid');
-    if(!container) return; // Stop if we aren't on the main page
+    if(!container) return; 
 
-    // Get data or use default
-    const storedData = localStorage.getItem(STORAGE_KEY);
-    const projects = storedData ? JSON.parse(storedData) : defaultProjects;
+    container.innerHTML = ''; // Clear "Loading..." text
+    
+    // Handle empty data
+    if (!projects || projects.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: #ccc; padding: 40px;">
+                <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                <p>No projects found in the database.</p>
+                <a href="cms.html" target="_blank" style="color: #f4a261; text-decoration: underline;">Go to Admin CMS to add one</a>
+            </div>
+        `;
+        return;
+    }
 
-    container.innerHTML = ''; // Clear existing hardcoded HTML
-
+    // Render Cards
     projects.forEach(proj => {
         const card = document.createElement('a');
-        card.href = proj.link;
-        card.className = 'project-card tilt-card'; // Add tilt class
-        card.setAttribute('data-category', proj.category); // For filtering
+        card.href = proj.link || '#';
+        // Only open in new tab if it's a real link
+        if(proj.link && proj.link.length > 1 && proj.link !== '#') {
+            card.target = '_blank';
+        }
         
-        // Add animation class for filter
+        card.className = 'project-card tilt-card'; 
+        card.setAttribute('data-category', proj.category); 
+        
+        // Add show class immediately for animation
         card.classList.add('show');
 
+        // Handle missing fields gracefully
+        const title = proj.title || 'Untitled Project';
+        // Note: Field name is 'description' in Firestore, not 'desc'
+        const desc = proj.description || proj.desc || 'No description provided.';
+        const img = proj.img || 'https://via.placeholder.com/600x400/013328/ede9d6?text=No+Image';
+
         card.innerHTML = `
-            <img alt="${proj.title}" src="${proj.img}" onerror="this.src='https://placehold.co/600x400/013328/ede9d6?text=Project'"/>
-            <h3>${proj.title}</h3>
-            <p>${proj.desc}</p>
+            <img alt="${title}" src="${img}" onerror="this.src='https://placehold.co/600x400/013328/ede9d6?text=Image+Error'"/>
+            <h3>${title}</h3>
+            <p>${desc}</p>
         `;
         container.appendChild(card);
     });
 
-    // Re-initialize Tilt Effect on new cards
+    // Re-initialize 3D Tilt Effect
     initTilt();
-}
+    
+    // Re-apply current filter if one was selected
+    const activeBtn = document.querySelector('.filter-btn.active');
+    if(activeBtn) {
+        let filterCat = 'all';
+        const txt = activeBtn.innerText.toLowerCase();
+        if(txt.includes('arch')) filterCat = 'arch';
+        if(txt.includes('dev')) filterCat = 'dev';
+        filterProjects(filterCat);
+    }
+};
 
-/* 2. FILTER FUNCTION */
+// 2. FILTER LOGIC
 function filterProjects(category) {
     const cards = document.querySelectorAll('.project-card');
     const buttons = document.querySelectorAll('.filter-btn');
 
+    // Update buttons
     buttons.forEach(btn => {
         btn.classList.remove('active');
-        if (btn.innerText.toLowerCase().includes(category === 'arch' ? 'architecture' : category === 'dev' ? 'development' : 'all')) {
-            btn.classList.add('active');
-        }
+        const btnText = btn.innerText.toLowerCase();
+        // Simple matching logic
+        if (category === 'all' && btnText.includes('all')) btn.classList.add('active');
+        else if (category === 'arch' && btnText.includes('arch')) btn.classList.add('active');
+        else if (category === 'dev' && btnText.includes('dev')) btn.classList.add('active');
     });
 
+    // Update cards with animation
     cards.forEach(card => {
-        const cardCategory = card.getAttribute('data-category');
-        if (category === 'all' || cardCategory === category) {
+        const cardCat = card.getAttribute('data-category');
+        if (category === 'all' || cardCat === category) {
             card.style.display = 'block';
-            setTimeout(() => card.style.opacity = '1', 50);
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => card.style.opacity = '1', 10);
         } else {
-            card.style.display = 'none';
             card.style.opacity = '0';
+            setTimeout(() => card.style.display = 'none', 300); // Wait for fade out
         }
     });
 }
+// Expose to window so HTML buttons can call it
+window.filterProjects = filterProjects;
 
-/* 3. TILT EFFECT & UTILS */
+// 3. UI EFFECTS (Tilt, Scroll, Menu)
 function initTilt() {
     const cards = document.querySelectorAll('.tilt-card');
     cards.forEach(card => {
@@ -77,37 +107,58 @@ function initTilt() {
             const rotateY = ((x - centerX) / centerX) * 10;
             card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
         });
-        card.addEventListener('mouseleave', () => { card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)'; });
+        card.addEventListener('mouseleave', () => { 
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)'; 
+        });
     });
 }
-
-// Run on load
-document.addEventListener('DOMContentLoaded', () => {
-    renderProjects(); // Render from storage
-    
-    // Existing Scroll Logic
-    const backBtn = document.getElementById('backToTop');
-    window.addEventListener('scroll', () => { 
-        if(backBtn) window.scrollY > 300 ? backBtn.classList.add('show') : backBtn.classList.remove('show'); 
-    });
-    
-    // Existing Skills Animation
-    const skillSection = document.getElementById('skills');
-    const progressBars = document.querySelectorAll('.progress-bar-fill');
-    let animated = false;
-    window.addEventListener('scroll', () => {
-        if(skillSection && skillSection.getBoundingClientRect().top < window.innerHeight / 1.3 && !animated) {
-            progressBars.forEach(bar => { const w = bar.style.width; bar.style.width = '0'; setTimeout(() => bar.style.width = w, 100); });
-            animated = true;
-        }
-    });
-});
 
 function toggleMenu() {
     const navLinks = document.querySelector('.nav-links');
     const overlay = document.querySelector('.overlay');
+    if(!navLinks || !overlay) return;
+    
     const isOpen = navLinks.classList.contains('show');
-    isOpen ? (navLinks.classList.remove('show'), overlay.style.display = 'none') : (navLinks.classList.add('show'), overlay.style.display = 'block');
+    if(isOpen) {
+        navLinks.classList.remove('show');
+        overlay.style.display = 'none';
+    } else {
+        navLinks.classList.add('show');
+        overlay.style.display = 'block';
+    }
 }
+window.toggleMenu = toggleMenu;
 
-function scrollToTop(){ window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function scrollToTop(){ 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+}
+window.scrollToTop = scrollToTop;
+
+// Event Listeners for Static UI
+document.addEventListener('DOMContentLoaded', () => {
+    // Back to top button
+    const backBtn = document.getElementById('backToTop');
+    if(backBtn) {
+        window.addEventListener('scroll', () => { 
+            window.scrollY > 300 ? backBtn.classList.add('show') : backBtn.classList.remove('show'); 
+        });
+    }
+    
+    // Skills Animation
+    const skillSection = document.getElementById('skills');
+    const progressBars = document.querySelectorAll('.progress-bar-fill');
+    let animated = false;
+    
+    if(skillSection) {
+        window.addEventListener('scroll', () => {
+            if(!animated && skillSection.getBoundingClientRect().top < window.innerHeight / 1.3) {
+                progressBars.forEach(bar => { 
+                    const w = bar.style.width; 
+                    bar.style.width = '0'; 
+                    setTimeout(() => bar.style.width = w, 100); 
+                });
+                animated = true;
+            }
+        });
+    }
+});
