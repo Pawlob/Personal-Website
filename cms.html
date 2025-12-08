@@ -12,19 +12,26 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- CONFIGURATION ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-cms-app';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // --- REAL CONFIGURATION FOR VERCEL ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_-BFQxbJ5FjCAgFzXD14T4V4G-nBgrkY",
+            authDomain: "kass-oma.firebaseapp.com",
+            projectId: "kass-oma",
+            storageBucket: "kass-oma.firebasestorage.app",
+            messagingSenderId: "262461043730",
+            appId: "1:262461043730:web:e00e93feee8a13ff4d14cb",
+            measurementId: "G-NE2NWFRBET"
+        };
+
+        // We hardcode the appId so the database path is consistent
+        const appId = 'pawlos-portfolio'; 
         
         let db, auth;
         let userId = null;
         let isAuthReady = false;
-
-        const log = (msg) => console.log(`[CMS] ${msg}`);
 
         // 1. Initialize Firebase
         window.initializeFirebase = async function() {
@@ -33,22 +40,13 @@
             statusMsg.className = "text-xs text-yellow-400 text-center mb-4";
 
             try {
-                if (Object.keys(firebaseConfig).length === 0) {
-                     if(window.location.protocol === 'file:') throw new Error("Cannot run locally via file://. Use a local server.");
-                     throw new Error("Missing Firebase Configuration.");
-                }
-                
+                // Initialize with real config
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                try {
-                    if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-                    else await signInAnonymously(auth);
-                } catch (authErr) {
-                    console.warn("Auth fallback...", authErr);
-                    await signInAnonymously(auth);
-                }
+                // Sign in Anonymously (Required for Vercel)
+                await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
@@ -82,7 +80,8 @@
         // 2. Get DB Reference
         function getProjectsCollectionRef() {
             if (!db || !userId) return null;
-            return collection(db, 'artifacts', appId, 'public', 'data', 'projects');
+            // Using a simplified path for your personal project
+            return collection(db, 'projects');
         }
 
         // 3. HANDLE SAVE
@@ -168,7 +167,7 @@
             });
         }
 
-        // 6. IMPORT DEFAULTS (NEW FEATURE)
+        // 6. IMPORT DEFAULTS
         window.importDefaults = async () => {
             if(!isAuthReady) return;
             if(!confirm("This will add 5 sample projects to the database. Continue?")) return;
